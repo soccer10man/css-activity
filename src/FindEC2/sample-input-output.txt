@@ -1,0 +1,14 @@
+// sample input to lambda function
+//Input = InstanceTag
+
+{
+    "Key": "Env",
+    "Value": "Prod"
+}
+
+
+
+// corresponding output
+// putput = list of string
+
+["i-024f4cfdbe088c929","i-0e8c0c16ba7c1f87c"]
