@@ -10,8 +10,6 @@
 
 ## Structures
 
-Workflows are independent of one another unless noted in the **Prerequisite** section of the workflow README file.
-
 1. deploy - contains the application artifacts like CF template, deployment script.
 2. src - contains codebase for lambda function
 
