@@ -1,0 +1,130 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "CSS activity solution",
+
+  "Resources": {
+	"findEC2InstanceLambda": {
+		"Type": "AWS::Lambda::Function",
+		"Properties": {
+			"FunctionName": "FindEC2",
+			"Code": {
+				"S3Bucket":"css-activity-2020",
+				"S3Key": "FindEC2.zip"
+			},
+			"Role": {
+			  "Fn::Join": [
+				"",
+				[
+				  "arn:aws:iam::",
+				  {
+					"Ref": "AWS::AccountId"
+				  },
+				  ":role/findEC2Role"
+				]
+			  ]
+			},
+			"MemorySize": 256,
+			"Timeout": 30,
+			"Handler": "FindEC2::FindEC2.Function::FunctionHandler",
+			"Runtime": "dotnetcore2.1"
+		
+		
+		}
+
+	},
+	"findEC2InstanceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "findEC2Role",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+      }
+    },
+    "findEC2InstancePolicy": {
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties": {
+        "ManagedPolicyName": "ec2DescribeOnlyPolicy",
+        "PolicyDocument": {
+			"Version": "2012-10-17",
+			"Statement": [
+				{
+					"Sid": "VisualEditor0",
+					"Effect": "Allow",
+					"Action": "ec2:DescribeInstances",
+					"Resource": "*"
+				}
+			]
+		},
+        "Roles": [
+          {
+            "Ref": "findEC2InstanceRole"
+          }
+        ]
+      }
+    },
+	"listFilesSSM": {
+		"Type": "AWS::SSM::Document",
+		"Properties": {
+			"Content": {
+				  "description": "Find EC2 with tag and run ls on each instance",
+				  "schemaVersion": "0.3",
+				  "parameters": {
+					"Key": {
+					  "type": "String",
+					  "description": "(Required) Tag Key of the instance",
+					  "default": "Env"
+					},
+					"Value": {
+					  "type": "String",
+					  "description": "(Required) Tag Value of the instance",
+					  "default": "Prod"
+					}
+				  },
+				  "mainSteps": [
+					{
+					  "name": "GetEC2",
+					  "action": "aws:invokeLambdaFunction",
+					  "inputs": {
+						"FunctionName": "FindEC2",
+						"Payload": "{\"Key\": \"{{Key}}\", \"Value\": \"{{Value}}\"}"
+					  }
+					},
+					{
+					  "name": "RunCommand",
+					  "action": "aws:runCommand",
+					  "inputs": {
+						"DocumentName": "AWS-RunShellScript",
+						"InstanceIds": [
+						  "{{GetEC2.Payload}}"
+						],
+						"Parameters": {
+						  "commands": [
+							"pwd",
+							"cd /",
+							"ls"
+						  ]
+						}
+					  }
+					}
+				  ]
+				},
+			"DocumentType" : "Automation",
+			"Name" : "CSS-runbook1"
+		}
+	}
+  }
+
+  
+
+
+}
