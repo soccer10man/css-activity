@@ -1,14 +1,20 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "CSS activity solution",
-
+  "Parameters":{
+	"deployBucket": {
+		"Type": "String",
+		"Description": "S3 bucket name used to store artifacts for lambda.",
+		"Default": "css-activity-2020"
+	}
+  },
   "Resources": {
 	"findEC2InstanceLambda": {
 		"Type": "AWS::Lambda::Function",
 		"Properties": {
 			"FunctionName": "FindEC2",
 			"Code": {
-				"S3Bucket":"css-activity-2020",
+				"S3Bucket": { "Ref": "deployBucket"},
 				"S3Key": "FindEC2.zip"
 			},
 			"Role": {
